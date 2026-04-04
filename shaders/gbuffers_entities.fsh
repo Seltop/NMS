@@ -72,17 +72,27 @@ void main() {
 	bool isArmor = (texSize.x == texSize.y * 2);
 
 	if (isArmor) {
-		// Grayscale from normal direction — no colour overlap with
-		// the skin's base or inverted-overlay RGB normal colours.
-		// Clamp to [0.05, 0.75] so armor never approaches pure white (sky)
-		float gray = clamp(dot(normalColor, vec3(0.2126, 0.7152, 0.0722)), 0.05, 0.75);
+		// Each face gets a unique fixed luminance within a single hue,
+		// so faces are always distinguishable regardless of view angle.
+		// Uses dark teal (low brightness, zero red) — can never approach
+		// white sky or overlap the warm RGB skin normal palette.
+		float faceValue;
+		vec3 a = abs(normal);
+		if (a.y >= a.x && a.y >= a.z) {
+			faceValue = normal.y > 0.0 ? 0.55 : 0.20;   // top / bottom
+		} else if (a.x >= a.z) {
+			faceValue = normal.x > 0.0 ? 0.45 : 0.30;   // east / west
+		} else {
+			faceValue = normal.z > 0.0 ? 0.50 : 0.25;   // south / north
+		}
+		vec3 armorColor = vec3(0.0, faceValue, faceValue * 0.8);  // dark teal
 
 		#if ARMOR_COLOR_MODE == ARMOR_MODE_NORMALS
-			color = vec4(vec3(gray) * brightness, 1.0);
+			color = vec4(armorColor, 1.0);
 		#elif ARMOR_COLOR_MODE == ARMOR_MODE_TEXTURE
 			color = vec4(baseColor.rgb * vertColor.rgb, 1.0);
 		#else // ARMOR_MODE_FLAT
-			color = vec4(vec3(0.85) * brightness, 1.0);
+			color = vec4(0.0, 0.4, 0.32, 1.0);
 		#endif
 		return;
 	}
