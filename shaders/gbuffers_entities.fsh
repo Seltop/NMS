@@ -74,7 +74,8 @@ void main() {
 	if (isArmor) {
 		// Grayscale from normal direction — no colour overlap with
 		// the skin's base or inverted-overlay RGB normal colours.
-		float gray = dot(normalColor, vec3(0.2126, 0.7152, 0.0722));
+		// Clamp to [0.05, 0.75] so armor never approaches pure white (sky)
+		float gray = clamp(dot(normalColor, vec3(0.2126, 0.7152, 0.0722)), 0.05, 0.75);
 
 		#if ARMOR_COLOR_MODE == ARMOR_MODE_NORMALS
 			color = vec4(vec3(gray) * brightness, 1.0);
