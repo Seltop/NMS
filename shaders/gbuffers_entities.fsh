@@ -72,20 +72,25 @@ void main() {
 	bool isArmor = (texSize.x == texSize.y * 2);
 
 	if (isArmor) {
-		// Each face gets a unique fixed luminance within a single hue,
-		// so faces are always distinguishable regardless of view angle.
-		// Uses dark teal (low brightness, zero red) — can never approach
-		// white sky or overlap the warm RGB skin normal palette.
-		float faceValue;
+		// Each face gets its own unique color — no two faces can ever
+		// look the same regardless of viewing angle.
+		// All kept dark/muted to stay away from white sky and distinct
+		// from the RGB skin normal palette.
+		vec3 armorColor;
 		vec3 a = abs(normal);
 		if (a.y >= a.x && a.y >= a.z) {
-			faceValue = normal.y > 0.0 ? 0.55 : 0.20;   // top / bottom
+			armorColor = normal.y > 0.0
+				? vec3(0.10, 0.50, 0.45)    // top:    dark cyan
+				: vec3(0.45, 0.10, 0.40);   // bottom: dark magenta
 		} else if (a.x >= a.z) {
-			faceValue = normal.x > 0.0 ? 0.45 : 0.30;   // east / west
+			armorColor = normal.x > 0.0
+				? vec3(0.50, 0.35, 0.10)    // east:   dark amber
+				: vec3(0.15, 0.35, 0.55);   // west:   steel blue
 		} else {
-			faceValue = normal.z > 0.0 ? 0.50 : 0.25;   // south / north
+			armorColor = normal.z > 0.0
+				? vec3(0.15, 0.50, 0.20)    // south:  dark green
+				: vec3(0.50, 0.15, 0.15);   // north:  dark red
 		}
-		vec3 armorColor = vec3(0.0, faceValue, faceValue * 0.8);  // dark teal
 
 		#if ARMOR_COLOR_MODE == ARMOR_MODE_NORMALS
 			color = vec4(armorColor, 1.0);
