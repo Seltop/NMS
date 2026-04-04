@@ -72,25 +72,11 @@ void main() {
 	bool isArmor = (texSize.x == texSize.y * 2);
 
 	if (isArmor) {
-		// Each face gets its own unique color — no two faces can ever
-		// look the same regardless of viewing angle.
-		// All kept dark/muted to stay away from white sky and distinct
-		// from the RGB skin normal palette.
-		vec3 armorColor;
-		vec3 a = abs(normal);
-		if (a.y >= a.x && a.y >= a.z) {
-			armorColor = normal.y > 0.0
-				? vec3(0.10, 0.50, 0.45)    // top:    dark cyan
-				: vec3(0.45, 0.10, 0.40);   // bottom: dark magenta
-		} else if (a.x >= a.z) {
-			armorColor = normal.x > 0.0
-				? vec3(0.50, 0.35, 0.10)    // east:   dark amber
-				: vec3(0.15, 0.35, 0.55);   // west:   steel blue
-		} else {
-			armorColor = normal.z > 0.0
-				? vec3(0.15, 0.50, 0.20)    // south:  dark green
-				: vec3(0.50, 0.15, 0.15);   // north:  dark red
-		}
+		// Raw normal without the +0.5 shift used by skin.
+		// Negative components clamp to 0, giving darker, more saturated
+		// colours that are naturally distinct from the shifted skin palette
+		// and never approach white.
+		vec3 armorColor = max(normal, 0.0);
 
 		#if ARMOR_COLOR_MODE == ARMOR_MODE_NORMALS
 			color = vec4(armorColor, 1.0);
