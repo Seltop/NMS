@@ -16,9 +16,5 @@ void main() {
 	if (baseColor.a < alphaTestRef) {
 		discard;
 	}
-	#if NORMAL_SCALE == SCALE_NORM
-		color = vec4(normal * 0.5 + 0.5, 1.0);
-	#else 
-		color = vec4(normal, 1.0);
-	#endif
+	color = vec4(normal * 0.5 + 0.5, 1.0);
 }

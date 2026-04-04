@@ -4,11 +4,19 @@ value.DISPLAY_MODE.DISPLAY_NORMALS = Normals
 
 option.RENDER_CLOUDS = Render clouds
 
-option.NORMAL_SCALE = Normals scale
-value.NORMAL_SCALE.SCALE_NORM = 0 to 1
-value.NORMAL_SCALE.SCALE_FULL -1 to 1 (clipped)
-
 option.ARMOR_COLOR_MODE = Armor mode
-value.ARMOR_COLOR_MODE.ARMOR_MODE_NORMALS = Normals
-value.ARMOR_COLOR_MODE.ARMOR_MODE_TEXTURE = Texture
-value.ARMOR_COLOR_MODE.ARMOR_MODE_FLAT = Flat
+value.ARMOR_COLOR_MODE.MODE_RGB = RGB
+value.ARMOR_COLOR_MODE.MODE_CMY = CMY
+value.ARMOR_COLOR_MODE.MODE_FLAT = Flat
+
+option.SKIN_LAYER1_MODE = First skin layer
+value.SKIN_LAYER1_MODE.MODE_RGB = RGB
+value.SKIN_LAYER1_MODE.MODE_CMY = CMY
+value.SKIN_LAYER1_MODE.MODE_FLAT = Flat
+
+option.SKIN_LAYER2_MODE = Second skin layer
+value.SKIN_LAYER2_MODE.MODE_RGB = RGB
+value.SKIN_LAYER2_MODE.MODE_CMY = CMY
+value.SKIN_LAYER2_MODE.MODE_FLAT = Flat
+
+option.SKIN_LAYER2_INVERT = Second skin layer inverted

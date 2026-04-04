@@ -58,13 +58,6 @@ void main() {
 		discard;
 	}
 
-	// --- normal colour ---------------------------------------------------
-	#if NORMAL_SCALE == SCALE_NORM
-		vec3 normalColor = normal * 0.5 + 0.5;
-	#else
-		vec3 normalColor = normal;
-	#endif
-
 	float brightness = faceBrightness(normal);
 
 	// --- armour detection via texture aspect ratio (64x32 = 2:1) ---------
@@ -72,18 +65,12 @@ void main() {
 	bool isArmor = (texSize.x == texSize.y * 2);
 
 	if (isArmor) {
-		// Raw normal without the +0.5 shift used by skin.
-		// Negative components clamp to 0, giving darker, more saturated
-		// colours that are naturally distinct from the shifted skin palette
-		// and never approach white.
-		vec3 armorColor = max(normal, 0.0);
-
-		#if ARMOR_COLOR_MODE == ARMOR_MODE_NORMALS
-			color = vec4(armorColor, 1.0);
-		#elif ARMOR_COLOR_MODE == ARMOR_MODE_TEXTURE
-			color = vec4(baseColor.rgb * vertColor.rgb, 1.0);
-		#else // ARMOR_MODE_FLAT
-			color = vec4(0.0, 0.4, 0.32, 1.0);
+		#if ARMOR_COLOR_MODE == MODE_RGB
+			color = vec4(max(normal, 0.0), 1.0);
+		#elif ARMOR_COLOR_MODE == MODE_CMY
+			color = vec4(normal * 0.5 + 0.5, 1.0);
+		#else // MODE_FLAT
+			color = vec4(0.5, 0.5, 0.5, 1.0);
 		#endif
 		return;
 	}
@@ -93,9 +80,27 @@ void main() {
 	bool overlay = isSkinFormat && isOverlayRegion(texCoord);
 
 	if (overlay) {
-		// Invert normal colours so overlay layers are visually distinct
-		color = vec4((1.0 - normalColor) * brightness, 1.0);
+		#if SKIN_LAYER2_MODE == MODE_FLAT
+			color = vec4(0.5, 0.5, 0.5, 1.0);
+		#else
+			#if SKIN_LAYER2_MODE == MODE_RGB
+				vec3 skin2 = max(normal, 0.0);
+			#else // MODE_CMY
+				vec3 skin2 = normal * 0.5 + 0.5;
+			#endif
+			#ifdef SKIN_LAYER2_INVERT
+				color = vec4((1.0 - skin2) * brightness, 1.0);
+			#else
+				color = vec4(skin2 * brightness, 1.0);
+			#endif
+		#endif
 	} else {
-		color = vec4(normalColor * brightness, 1.0);
+		#if SKIN_LAYER1_MODE == MODE_RGB
+			color = vec4(max(normal, 0.0) * brightness, 1.0);
+		#elif SKIN_LAYER1_MODE == MODE_CMY
+			color = vec4((normal * 0.5 + 0.5) * brightness, 1.0);
+		#else // MODE_FLAT
+			color = vec4(0.5, 0.5, 0.5, 1.0);
+		#endif
 	}
 }
