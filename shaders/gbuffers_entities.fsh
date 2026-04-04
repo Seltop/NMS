@@ -72,16 +72,12 @@ void main() {
 	bool isArmor = (texSize.x == texSize.y * 2);
 
 	if (isArmor) {
-		// Remap normals into a tinted range that never overlaps with
-		// the skin's base or inverted-overlay colours.
-		// Skin base  ≈ warm purple/blue/green  (normal * 0.5 + 0.5)
-		// Skin overlay ≈ warm inverted          (1 - above)
-		// Armor       → yellow-orange channel   (high R+G, low B)
-		float n01 = dot(normalColor, vec3(0.333));          // luminance-like scalar
-		vec3 armorColor = vec3(0.9, 0.7, 0.15) * n01;      // yellow-orange tint
+		// Grayscale from normal direction — no colour overlap with
+		// the skin's base or inverted-overlay RGB normal colours.
+		float gray = dot(normalColor, vec3(0.2126, 0.7152, 0.0722));
 
 		#if ARMOR_COLOR_MODE == ARMOR_MODE_NORMALS
-			color = vec4(armorColor * brightness, 1.0);
+			color = vec4(vec3(gray) * brightness, 1.0);
 		#elif ARMOR_COLOR_MODE == ARMOR_MODE_TEXTURE
 			color = vec4(baseColor.rgb * vertColor.rgb, 1.0);
 		#else // ARMOR_MODE_FLAT
