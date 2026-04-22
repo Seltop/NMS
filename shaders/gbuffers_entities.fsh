@@ -4,6 +4,8 @@
 
 uniform sampler2D gtexture;
 uniform float alphaTestRef = 0.1;
+uniform int entityId;
+uniform int currentRenderedItemId;
 
 in vec2 texCoord;
 in vec3 normal;
@@ -60,9 +62,13 @@ void main() {
 
 	float brightness = faceBrightness(normal);
 
-	// --- armour detection via texture aspect ratio (64x32 = 2:1) ---------
+	// --- armour detection via Iris per-draw item ID ----------------------
+	// item.properties maps the item currently being rendered onto small integer
+	// buckets: 2=helmet, 3=chestplate/elytra, 4=leggings, 5=boots, 6=animal armor.
+	// Texture aspect ratio alone is unreliable because many mob textures are
+	// also 64x32 (blaze, enderman, ghast, shulker, ...).
 	ivec2 texSize = textureSize(gtexture, 0);
-	bool isArmor = (texSize.x == texSize.y * 2);
+	bool isArmor = (currentRenderedItemId >= 2 && currentRenderedItemId <= 6);
 
 	if (isArmor) {
 		#if ARMOR_COLOR_MODE == MODE_RGB
@@ -76,7 +82,10 @@ void main() {
 	}
 
 	// --- overlay detection (skin-format 64x64 textures) ------------------
-	bool isSkinFormat = (texSize.x == texSize.y);
+	// Only entities mapped in entity.properties get LAYER2 overlay detection —
+	// texture size alone isn't a reliable skin-format signal, because many mob
+	// textures are also square without a player-style second layer.
+	bool isSkinFormat = (entityId == 101) && (texSize.x == texSize.y);
 	bool overlay = isSkinFormat && isOverlayRegion(texCoord);
 
 	if (overlay) {
