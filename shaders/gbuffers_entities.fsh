@@ -60,6 +60,14 @@ void main() {
 		discard;
 	}
 
+	// Drop the vanilla entity drop-shadow. The shadow.png texture is a pure-black
+	// circular alpha gradient, so any sample of it has RGB ≈ 0; real entity textures
+	// virtually never have all three channels near zero on a fragment that also
+	// passes the alpha test. Cheap and robust.
+	if (baseColor.r + baseColor.g + baseColor.b < 0.02) {
+		discard;
+	}
+
 	float brightness = faceBrightness(normal);
 
 	// --- armour detection via Iris per-draw item ID ----------------------
