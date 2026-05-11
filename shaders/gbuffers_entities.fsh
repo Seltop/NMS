@@ -1,15 +1,14 @@
-#version 330 compatibility
+#version 330 core
 
 #include "/lib/settings.glsl"
 
 uniform sampler2D gtexture;
-uniform float alphaTestRef = 0.1;
+uniform float alphaTestRef;
 uniform int entityId;
 uniform int currentRenderedItemId;
 
 in vec2 texCoord;
 in vec3 normal;
-in vec4 vertColor;
 
 /* RENDERTARGETS: 0 */
 layout(location = 0) out vec4 color;
@@ -56,27 +55,30 @@ float faceBrightness(vec3 n) {
 
 void main() {
 	vec4 baseColor = texture(gtexture, texCoord);
-	if (baseColor.a < alphaTestRef) {
+	if (baseColor.a < max(alphaTestRef, 0.001)) {
 		discard;
 	}
 
 	// Drop the vanilla entity drop-shadow. The shadow.png texture is a pure-black
-	// circular alpha gradient, so any sample of it has RGB ≈ 0; real entity textures
-	// virtually never have all three channels near zero on a fragment that also
-	// passes the alpha test. Cheap and robust.
+	// circular alpha gradient, so any sample of it has RGB near 0; real entity
+	// textures virtually never have all three channels near zero on a fragment
+	// that also passes the alpha test.
 	if (baseColor.r + baseColor.g + baseColor.b < 0.02) {
 		discard;
 	}
 
 	float brightness = faceBrightness(normal);
 
-	// --- armour detection via Iris per-draw item ID ----------------------
+	// --- armor detection via Iris per-draw item ID -----------------------
 	// item.properties maps the item currently being rendered onto small integer
 	// buckets: 2=helmet, 3=chestplate/elytra, 4=leggings, 5=boots, 6=animal armor.
-	// Texture aspect ratio alone is unreliable because many mob textures are
-	// also 64x32 (blaze, enderman, ghast, shulker, ...).
+	// Texture aspect ratio alone is unreliable because many mob textures are also
+	// 64x32 (blaze, enderman, ghast, shulker, ...).
 	ivec2 texSize = textureSize(gtexture, 0);
-	bool isArmor = (currentRenderedItemId >= 2 && currentRenderedItemId <= 6);
+	bool mappedArmorItem = (currentRenderedItemId >= 2 && currentRenderedItemId <= 6);
+	bool unmappedItemDraw = (currentRenderedItemId <= 0 || currentRenderedItemId == 65535);
+	bool playerArmorTexture = (entityId == 101 && texSize.x == texSize.y * 2);
+	bool isArmor = mappedArmorItem || (unmappedItemDraw && playerArmorTexture);
 
 	if (isArmor) {
 		#if ARMOR_COLOR_MODE == MODE_RGB
@@ -90,8 +92,8 @@ void main() {
 	}
 
 	// --- overlay detection (skin-format 64x64 textures) ------------------
-	// Only entities mapped in entity.properties get LAYER2 overlay detection —
-	// texture size alone isn't a reliable skin-format signal, because many mob
+	// Only entities mapped in entity.properties get LAYER2 overlay detection.
+	// Texture size alone is not a reliable skin-format signal, because many mob
 	// textures are also square without a player-style second layer.
 	bool isSkinFormat = (entityId == 101) && (texSize.x == texSize.y);
 	bool overlay = isSkinFormat && isOverlayRegion(texCoord);

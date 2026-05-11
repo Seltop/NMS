@@ -1,7 +1,7 @@
-#version 330 compatibility
+#version 330 core
 
 /* RENDERTARGETS: 0 */
-out vec4 color;
+layout(location = 0) out vec4 color;
 
 void main() {
     color = vec4(1.0, 1.0, 1.0, 1.0);
