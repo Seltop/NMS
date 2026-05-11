@@ -20,3 +20,9 @@ value.SKIN_LAYER2_MODE.MODE_CMY = CMY
 value.SKIN_LAYER2_MODE.MODE_FLAT = Flat
 
 option.SKIN_LAYER2_INVERT = Second skin layer inverted
+value.SKIN_LAYER2_INVERT.0 = Off
+value.SKIN_LAYER2_INVERT.1 = On
+
+option.SKIN_LAYER2_DEBUG = Second skin layer debug
+value.SKIN_LAYER2_DEBUG.0 = Off
+value.SKIN_LAYER2_DEBUG.1 = On

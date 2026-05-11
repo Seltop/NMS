@@ -13,43 +13,22 @@ in vec3 normal;
 /* RENDERTARGETS: 0 */
 layout(location = 0) out vec4 color;
 
-// Overlay regions of the standard 64x64 Minecraft skin layout.
-//
-//   V [0.00, 0.25]: U [0.00, 0.50) = head base
-//                    U [0.50, 1.00] = hat overlay
-//
-//   V [0.25, 0.50]: right-leg base, body base, right-arm base (no overlays)
-//
-//   V [0.50, 0.75]: right-leg overlay, jacket overlay, right-arm overlay
-//                    (entire row is overlay)
-//
-//   V [0.75, 1.00]: U [0.00, 0.25) = left-leg overlay
-//                    U [0.25, 0.50) = left-leg base
-//                    U [0.50, 0.75) = left-arm base
-//                    U [0.75, 1.00] = left-arm overlay
 bool isOverlayRegion(vec2 uv) {
-	// Hat overlay
 	if (uv.y < 0.25 && uv.x >= 0.5) return true;
-	// Right leg, jacket, right arm overlays
 	if (uv.y >= 0.5 && uv.y < 0.75) return true;
-	// Left leg overlay
 	if (uv.y >= 0.75 && uv.x < 0.25) return true;
-	// Left arm overlay
 	if (uv.y >= 0.75 && uv.x >= 0.75) return true;
 	return false;
 }
 
-// Per-face brightness based on the world-space normal direction.
-// Each dominant axis/sign gets a distinct multiplier so that adjacent
-// faces of the same limb or body part are visually separable.
 float faceBrightness(vec3 n) {
 	vec3 a = abs(n);
 	if (a.y >= a.x && a.y >= a.z) {
-		return n.y > 0.0 ? 1.10 : 0.80;   // top / bottom
+		return n.y > 0.0 ? 1.10 : 0.80;
 	} else if (a.x >= a.z) {
-		return n.x > 0.0 ? 0.95 : 0.85;   // east / west
+		return n.x > 0.0 ? 0.95 : 0.85;
 	} else {
-		return n.z > 0.0 ? 1.00 : 0.90;   // south / north
+		return n.z > 0.0 ? 1.00 : 0.90;
 	}
 }
 
@@ -59,21 +38,12 @@ void main() {
 		discard;
 	}
 
-	// Drop the vanilla entity drop-shadow. The shadow.png texture is a pure-black
-	// circular alpha gradient, so any sample of it has RGB near 0; real entity
-	// textures virtually never have all three channels near zero on a fragment
-	// that also passes the alpha test.
 	if (baseColor.r + baseColor.g + baseColor.b < 0.02) {
 		discard;
 	}
 
 	float brightness = faceBrightness(normal);
 
-	// --- armor detection via Iris per-draw item ID -----------------------
-	// item.properties maps the item currently being rendered onto small integer
-	// buckets: 2=helmet, 3=chestplate/elytra, 4=leggings, 5=boots, 6=animal armor.
-	// Texture aspect ratio alone is unreliable because many mob textures are also
-	// 64x32 (blaze, enderman, ghast, shulker, ...).
 	ivec2 texSize = textureSize(gtexture, 0);
 	bool mappedArmorItem = (currentRenderedItemId >= 2 && currentRenderedItemId <= 6);
 	bool unmappedItemDraw = (currentRenderedItemId <= 0 || currentRenderedItemId == 65535);
@@ -85,18 +55,13 @@ void main() {
 			color = vec4(max(normal, 0.0), 1.0);
 		#elif ARMOR_COLOR_MODE == MODE_CMY
 			color = vec4(normal * 0.5 + 0.5, 1.0);
-		#else // MODE_FLAT
+		#else
 			color = vec4(0.5, 0.5, 0.5, 1.0);
 		#endif
 		return;
 	}
 
-	// --- overlay detection (skin-format 64x64 textures) ------------------
-	// Only entities mapped in entity.properties get LAYER2 overlay detection.
-	// Do not also gate this on textureSize(): some backends report the sampler
-	// size differently, which would disable layer 2 even when entityId is right.
-	bool isSkinFormat = (entityId == 101);
-	bool overlay = isSkinFormat && isOverlayRegion(texCoord);
+	bool overlay = (entityId == 101) && isOverlayRegion(texCoord);
 
 	if (overlay) {
 		#if SKIN_LAYER2_DEBUG == 1
@@ -109,7 +74,7 @@ void main() {
 		#else
 			#if SKIN_LAYER2_MODE == MODE_RGB
 				vec3 skin2 = max(normal, 0.0);
-			#else // MODE_CMY
+			#else
 				vec3 skin2 = normal * 0.5 + 0.5;
 			#endif
 			#if SKIN_LAYER2_INVERT == 1
@@ -123,7 +88,7 @@ void main() {
 			color = vec4(max(normal, 0.0) * brightness, 1.0);
 		#elif SKIN_LAYER1_MODE == MODE_CMY
 			color = vec4((normal * 0.5 + 0.5) * brightness, 1.0);
-		#else // MODE_FLAT
+		#else
 			color = vec4(0.5, 0.5, 0.5, 1.0);
 		#endif
 	}
