@@ -59,11 +59,17 @@ void main() {
 		discard;
 	}
 
-	// Drop the vanilla entity drop-shadow. The shadow.png texture is a pure-black
-	// circular alpha gradient, so any sample of it has RGB near 0; real entity
-	// textures virtually never have all three channels near zero on a fragment
-	// that also passes the alpha test.
-	if (baseColor.r + baseColor.g + baseColor.b < 0.02) {
+	ivec2 texSize = textureSize(gtexture, 0);
+	bool entityMappedSkin = (entityId == 101);
+	float skinProbeAlpha = texelFetch(gtexture, max(texSize / 8, ivec2(0)), 0).a;
+	bool skinTexture = (texSize.x >= 64) && ((texSize.x == texSize.y) || (texSize.x == texSize.y * 2)) && (skinProbeAlpha > 0.999);
+	bool squareTextureSkinFallback = (SKIN_LAYER2_SQUARE_TEXTURE_FALLBACK == 1) && (texSize.x == texSize.y) && skinTexture;
+	bool skinLikeDraw = entityMappedSkin || skinTexture;
+
+	// The entity shadow pass is a black alpha texture and is not always mapped to
+	// entityId 1. Keep opaque black skin pixels, but still drop the shadow.
+	bool blackShadowFallback = (baseColor.r + baseColor.g + baseColor.b < 0.02) && !skinLikeDraw;
+	if (entityId == 1 || blackShadowFallback) {
 		discard;
 	}
 
@@ -74,10 +80,9 @@ void main() {
 	// buckets: 2=helmet, 3=chestplate/elytra, 4=leggings, 5=boots, 6=animal armor.
 	// Texture aspect ratio alone is unreliable because many mob textures are also
 	// 64x32 (blaze, enderman, ghast, shulker, ...).
-	ivec2 texSize = textureSize(gtexture, 0);
 	bool mappedArmorItem = (currentRenderedItemId >= 2 && currentRenderedItemId <= 6);
 	bool unmappedItemDraw = (currentRenderedItemId <= 0 || currentRenderedItemId == 65535);
-	bool playerArmorTexture = (entityId == 101 && texSize.x == texSize.y * 2);
+	bool playerArmorTexture = (entityMappedSkin && texSize.x == texSize.y * 2);
 	bool isArmor = mappedArmorItem || (unmappedItemDraw && playerArmorTexture);
 
 	if (isArmor) {
@@ -95,7 +100,7 @@ void main() {
 	// Only entities mapped in entity.properties get LAYER2 overlay detection.
 	// Do not also gate this on textureSize(): some backends report the sampler
 	// size differently, which would disable layer 2 even when entityId is right.
-	bool isSkinFormat = (entityId == 101);
+	bool isSkinFormat = entityMappedSkin || squareTextureSkinFallback;
 	bool overlay = isSkinFormat && isOverlayRegion(texCoord);
 
 	if (overlay) {

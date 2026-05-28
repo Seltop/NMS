@@ -12,5 +12,6 @@
 #define SKIN_LAYER2_MODE MODE_CMY // Second skin layer rendering mode [MODE_RGB MODE_CMY MODE_FLAT]
 #define SKIN_LAYER2_INVERT 1 // [0 1] Invert second skin layer colors
 #define SKIN_LAYER2_DEBUG 0 // [0 1] Paint detected second skin layer magenta
+#define SKIN_LAYER2_SQUARE_TEXTURE_FALLBACK 1 // [0 1] Detect layer 2 on unmapped square skin textures
 
 #endif // SETTINGS_GLSL

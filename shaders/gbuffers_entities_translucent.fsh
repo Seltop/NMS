@@ -38,16 +38,22 @@ void main() {
 		discard;
 	}
 
-	if (baseColor.r + baseColor.g + baseColor.b < 0.02) {
+	ivec2 texSize = textureSize(gtexture, 0);
+	bool entityMappedSkin = (entityId == 101);
+	float skinProbeAlpha = texelFetch(gtexture, max(texSize / 8, ivec2(0)), 0).a;
+	bool skinTexture = (texSize.x >= 64) && ((texSize.x == texSize.y) || (texSize.x == texSize.y * 2)) && (skinProbeAlpha > 0.999);
+	bool squareTextureSkinFallback = (SKIN_LAYER2_SQUARE_TEXTURE_FALLBACK == 1) && (texSize.x == texSize.y) && skinTexture;
+	bool skinLikeDraw = entityMappedSkin || skinTexture;
+	bool blackShadowFallback = (baseColor.r + baseColor.g + baseColor.b < 0.02) && !skinLikeDraw;
+	if (entityId == 1 || blackShadowFallback) {
 		discard;
 	}
 
 	float brightness = faceBrightness(normal);
 
-	ivec2 texSize = textureSize(gtexture, 0);
 	bool mappedArmorItem = (currentRenderedItemId >= 2 && currentRenderedItemId <= 6);
 	bool unmappedItemDraw = (currentRenderedItemId <= 0 || currentRenderedItemId == 65535);
-	bool playerArmorTexture = (entityId == 101 && texSize.x == texSize.y * 2);
+	bool playerArmorTexture = (entityMappedSkin && texSize.x == texSize.y * 2);
 	bool isArmor = mappedArmorItem || (unmappedItemDraw && playerArmorTexture);
 
 	if (isArmor) {
@@ -61,7 +67,7 @@ void main() {
 		return;
 	}
 
-	bool overlay = (entityId == 101) && isOverlayRegion(texCoord);
+	bool overlay = (entityMappedSkin || squareTextureSkinFallback) && isOverlayRegion(texCoord);
 
 	if (overlay) {
 		#if SKIN_LAYER2_DEBUG == 1
